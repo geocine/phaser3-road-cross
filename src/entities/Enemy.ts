@@ -1,5 +1,4 @@
 import 'phaser';
-
 export default class Enemy extends Phaser.GameObjects.Sprite {
   speed: number;
   minY: number;
@@ -40,8 +39,7 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     let playerRect = this.player.getBounds();
     let enemyRect = this.getBounds();
     if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, enemyRect)) {
-      console.log('Game Over');
-      this.scene.scene.restart();
+      return this.emit('kill');
     }
   }
 }

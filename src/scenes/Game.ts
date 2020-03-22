@@ -7,6 +7,7 @@ export default class Demo extends Phaser.Scene {
   player: Player;
   enemy: Enemy;
   goal: Goal;
+  isTerminating: boolean;
 
   constructor() {
     super('GameScene');
@@ -26,21 +27,57 @@ export default class Demo extends Phaser.Scene {
     this.createGoal();
   }
 
-  update() {}
+  update() {
+    // don't execute if we are terminating
+    if (this.isTerminating) return;
+  }
 
   createPlayer() {
     this.player = new Player(this, 50, 180);
   }
 
   createEnemies() {
-    for (let i = 0, x = 90, y = 100; i < 5; i++, x += 80, y += 20) {
+    for (let i = 0, x = 90, y = 100; i < 5; i++) {
       const enemy = new Enemy(this, x, y);
       enemy.setPlayer(this.player);
+      enemy.on('kill', () => {
+        console.log('game over');
+        this.gameOver();
+      });
+      x += 80;
+      y += 20;
     }
   }
 
   createGoal() {
     this.goal = new Goal(this, 560, 180);
     this.goal.setPlayer(this.player);
+  }
+
+  gameOver() {
+    // initiated game over sequence
+    this.isTerminating = true;
+
+    // shake camera
+    this.cameras.main.shake(500);
+
+    // listen for event completion
+    this.cameras.main.on(
+      'camerashakecomplete',
+      () => {
+        // fade out
+        this.cameras.main.fade(500);
+      },
+      this
+    );
+
+    this.cameras.main.on(
+      'camerafadeoutcomplete',
+      () => {
+        // restart the Scene
+        this.scene.restart();
+      },
+      this
+    );
   }
 }
