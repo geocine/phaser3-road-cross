@@ -34,6 +34,9 @@ export default class Demo extends Phaser.Scene {
 
   createPlayer() {
     this.player = new Player(this, 50, 180);
+    this.player.on('dead', () => {
+      this.gameOver();
+    });
   }
 
   createEnemies() {
@@ -41,8 +44,7 @@ export default class Demo extends Phaser.Scene {
       const enemy = new Enemy(this, x, y);
       enemy.setPlayer(this.player);
       enemy.on('kill', () => {
-        console.log('game over');
-        this.gameOver();
+        this.player.kill();
       });
       x += 80;
       y += 20;
@@ -52,6 +54,9 @@ export default class Demo extends Phaser.Scene {
   createGoal() {
     this.goal = new Goal(this, 560, 180);
     this.goal.setPlayer(this.player);
+    this.goal.on('reached', () => {
+      this.scene.restart();
+    });
   }
 
   gameOver() {

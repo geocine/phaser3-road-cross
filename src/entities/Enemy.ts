@@ -1,4 +1,5 @@
 import 'phaser';
+import Player from './Player';
 export default class Enemy extends Phaser.GameObjects.Sprite {
   speed: number;
   minY: number;
@@ -6,7 +7,7 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
   minSpeed: number;
   maxSpeed: number;
   direction: number;
-  player: Phaser.GameObjects.Sprite;
+  player: Player;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'enemy');
@@ -22,11 +23,13 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
       this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
   }
 
-  setPlayer(player: Phaser.GameObjects.Sprite) {
+  setPlayer(player: Player) {
     this.player = player;
   }
 
   preUpdate() {
+    if (this.player.dead) return;
+
     this.y += this.speed;
 
     const conditionUp = this.speed < 0 && this.y <= this.minY;
