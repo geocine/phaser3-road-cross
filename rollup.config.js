@@ -1,13 +1,22 @@
 import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import serve from 'rollup-plugin-serve';
+import alias from '@rollup/plugin-alias';
 import typescript from 'rollup-plugin-typescript2';
-import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
-import copy from 'rollup-plugin-copy';
+import staticFiles from 'rollup-plugin-static-files';
+import path from 'path';
 
 const isProd = process.env.NODE_ENV === 'production';
+
+// nollup hack
+const hotReload = () => ({
+  renderChunk: code =>
+    code.replace(
+      'modules[number](function (dep) {\n',
+      'module.hot.accept(() => {window.location.reload();})\n\nmodules[number](function (dep) {\n'
+    )
+});
 
 const config = {
   //  Our games entry point (edit as required)
@@ -16,46 +25,24 @@ const config = {
   //  Where the build file is to be generated.
   //  Most games being built for distribution can use iife as the module type.
   output: {
-    file: 'public/index.js',
+    dir: 'dist',
+    entryFileNames: 'index.js',
     name: 'Phaser',
     format: 'iife',
-    sourcemap: isProd,
+    sourcemap: false,
     intro: 'var global = window'
   },
 
   plugins: [
     //  Toggle the booleans here to enable / disable Phaser 3 features:
     replace({
-      'typeof CANVAS_RENDERER': JSON.stringify(true),
-      'typeof WEBGL_RENDERER': JSON.stringify(true),
-      'typeof EXPERIMENTAL': JSON.stringify(true),
-      'typeof PLUGIN_CAMERA3D': JSON.stringify(false),
-      'typeof PLUGIN_FBINSTANT': JSON.stringify(false),
-      'typeof FEATURE_SOUND': JSON.stringify(true),
-      'process.env.NODE_ENV': JSON.stringify(
-        isProd ? 'production' : 'development'
-      )
-    }),
-
-    // Copy to public folder
-    copy({
-      targets: [
-        { src: 'src/index.html', dest: 'public' },
-        { src: 'src/assets', dest: 'public' }
-      ]
-    }),
-
-    // Parse our .ts source files
-    resolve({
-      extensions: ['.ts']
-    }),
-
-    // We need to convert the Phaser 3 CJS modules into a format Rollup can use:
-    commonjs({
-      include: ['node_modules/eventemitter3/**', 'node_modules/phaser/**'],
-      exclude: ['node_modules/phaser/src/polyfills/requestAnimationFrame.js'],
-      sourceMap: false,
-      ignoreGlobal: true
+      'typeof CANVAS_RENDERER': "'true'",
+      'typeof WEBGL_RENDERER': "'true'",
+      'typeof EXPERIMENTAL': "'true'",
+      'typeof PLUGIN_CAMERA3D': "'false'",
+      'typeof PLUGIN_FBINSTANT': "'false'",
+      'typeof FEATURE_SOUND': "'true'",
+      'process.env.NODE_ENV': isProd ? "'production'" : "'development'"
     }),
 
     //  See https://www.npmjs.com/package/rollup-plugin-typescript2 for config options
@@ -66,26 +53,45 @@ const config = {
 if (isProd) {
   config.plugins = [
     ...config.plugins,
+    // Parse our .ts source files
+    resolve({
+      extensions: ['.ts']
+    }),
+    // We need to convert the Phaser 3 CJS modules into a format Rollup can use:
+    commonjs({
+      include: ['node_modules/eventemitter3/**', 'node_modules/phaser/**'],
+      exclude: ['node_modules/phaser/src/polyfills/requestAnimationFrame.js'],
+      sourceMap: isProd,
+      ignoreGlobal: true
+    }),
+    staticFiles({
+      include: ['./public']
+    }),
     //  See https://www.npmjs.com/package/rollup-plugin-uglify for config options
     terser({
-      mangle: false
+      mangle: false,
+      compress: {
+        global_defs: {
+          module: false
+        }
+      }
     })
   ];
 } else {
   config.plugins = [
     ...config.plugins,
-    //  See https://www.npmjs.com/package/rollup-plugin-serve for config options
-    serve({
-      open: true,
-      verbose: true,
-      contentBase: 'public',
-      host: 'localhost',
-      port: 2020,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      }
+    alias({
+      entries: [
+        {
+          find: 'phaser',
+          replacement: path.resolve(
+            __dirname,
+            'node_modules/phaser/dist/phaser.js'
+          )
+        }
+      ]
     }),
-    livereload('public')
+    hotReload()
   ];
 }
 
