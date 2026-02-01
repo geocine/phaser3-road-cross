@@ -1,4 +1,4 @@
-import 'phaser';
+﻿import Phaser from 'phaser';
 
 export default class Player extends Phaser.GameObjects.Sprite {
   playerSpeed: number;
@@ -8,13 +8,15 @@ export default class Player extends Phaser.GameObjects.Sprite {
     super(scene, x, y, 'player');
     scene.add.existing(this);
     this.setScale(0.5);
-    this.playerSpeed = 3;
+    // pixels per second
+    this.playerSpeed = 180;
     this.dead = false;
   }
 
-  preUpdate() {
+  preUpdate(time: number, delta: number) {
     if (this.scene.input.activePointer.isDown) {
-      this.x += this.playerSpeed;
+      const dt = delta / 1000;
+      this.x += this.playerSpeed * dt;
     }
   }
 

@@ -1,4 +1,4 @@
-import 'phaser';
+﻿import Phaser from 'phaser';
 import Enemy from '../entities/Enemy';
 import Player from '../entities/Player';
 import Goal from '../entities/Goal';

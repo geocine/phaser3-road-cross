@@ -1,4 +1,4 @@
-import 'phaser';
+﻿import Phaser from 'phaser';
 
 export default class Goal extends Phaser.GameObjects.Sprite {
   player: Phaser.GameObjects.Sprite;

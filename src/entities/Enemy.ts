@@ -1,4 +1,4 @@
-import 'phaser';
+﻿import Phaser from 'phaser';
 import Player from './Player';
 export default class Enemy extends Phaser.GameObjects.Sprite {
   speed: number;
@@ -16,8 +16,9 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     this.setFlipX(true);
     this.minY = 80;
     this.maxY = 280;
-    this.minSpeed = 2;
-    this.maxSpeed = 4.5;
+    // pixels per second
+    this.minSpeed = 120;
+    this.maxSpeed = 270;
     this.direction = Math.random() < 0.5 ? 1 : -1;
     this.speed =
       this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
@@ -27,10 +28,11 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     this.player = player;
   }
 
-  preUpdate() {
+  preUpdate(time: number, delta: number) {
     if (this.player.dead) return;
 
-    this.y += this.speed;
+    const dt = delta / 1000;
+    this.y += this.speed * dt;
 
     const conditionUp = this.speed < 0 && this.y <= this.minY;
     const conditionDown = this.speed > 0 && this.y >= this.maxY;
