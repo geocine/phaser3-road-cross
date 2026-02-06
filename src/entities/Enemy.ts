@@ -29,6 +29,8 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
   }
 
   preUpdate(time: number, delta: number) {
+    super.preUpdate(time, delta);
+
     if (this.player.dead) return;
 
     const dt = delta / 1000;

@@ -21,6 +21,9 @@ export default class Demo extends Phaser.Scene {
   }
 
   create() {
+    // Reset transient state when the scene restarts.
+    this.isTerminating = false;
+
     this.add.sprite(320, 180, 'background');
     this.createPlayer();
     this.createEnemies();
@@ -67,7 +70,7 @@ export default class Demo extends Phaser.Scene {
     this.cameras.main.shake(500);
 
     // listen for event completion
-    this.cameras.main.on(
+    this.cameras.main.once(
       'camerashakecomplete',
       () => {
         // fade out
@@ -76,7 +79,7 @@ export default class Demo extends Phaser.Scene {
       this
     );
 
-    this.cameras.main.on(
+    this.cameras.main.once(
       'camerafadeoutcomplete',
       () => {
         // restart the Scene
