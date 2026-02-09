@@ -5,6 +5,7 @@ A tap-to-move crossing game where you dodge patrolling enemies and reach the tre
 ## Gameplay
 
 - Hold the mouse button or touch to move the player to the right.
+- Keyboard controls: Left/Right arrows or A/D to move (Space also moves right).
 - Avoid the dragon enemies that move up and down.
 - Touch the treasure to restart the round.
 
