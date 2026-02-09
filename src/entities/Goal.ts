@@ -13,10 +13,10 @@ export default class Goal extends Phaser.GameObjects.Sprite {
   }
 
   preUpdate() {
-    let playerRect = this.player.getBounds();
-    let treasureRect = this.getBounds();
+    const playerRect = this.player.getBounds();
+    const treasureRect = this.getBounds();
+
     if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, treasureRect)) {
-      console.log('reached goal');
       return this.emit('reached');
     }
   }
