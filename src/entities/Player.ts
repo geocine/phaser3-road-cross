@@ -43,12 +43,20 @@ export default class Player extends Phaser.GameObjects.Sprite {
 
     const dt = delta / 1000;
 
-    const moveRightFromPointer = this.scene.input.activePointer.isDown;
     const moveLeftFromKeys = !!this.keys && (this.keys.left.isDown || this.keys.a.isDown);
     const moveRightFromKeys =
       !!this.keys && (this.keys.right.isDown || this.keys.d.isDown || this.keys.space.isDown);
 
-    if (moveLeftFromKeys) this.x -= this.playerSpeed * dt;
+    // Pointer / touch controls: hold to move. Move direction is based on the pointer position
+    // relative to the player so mobile can move both left and right.
+    const pointer = this.scene.input.activePointer;
+    const hasPointerInput = pointer.isDown;
+    const pointerX = pointer.worldX ?? pointer.x;
+    const pointerDeadZonePx = 8;
+    const moveLeftFromPointer = hasPointerInput && pointerX < this.x - pointerDeadZonePx;
+    const moveRightFromPointer = hasPointerInput && pointerX > this.x + pointerDeadZonePx;
+
+    if (moveLeftFromKeys || moveLeftFromPointer) this.x -= this.playerSpeed * dt;
     if (moveRightFromKeys || moveRightFromPointer) this.x += this.playerSpeed * dt;
 
     // Keep player within the visible game bounds.
