@@ -8,6 +8,7 @@ export default class Demo extends Phaser.Scene {
   enemy: Enemy;
   goal: Goal;
   isTerminating: boolean;
+  hudText?: Phaser.GameObjects.Text;
 
   constructor() {
     super('GameScene');
@@ -25,6 +26,7 @@ export default class Demo extends Phaser.Scene {
     this.isTerminating = false;
 
     this.add.sprite(320, 180, 'background');
+    this.createHud();
     this.createPlayer();
     this.createEnemies();
     this.createGoal();
@@ -33,6 +35,29 @@ export default class Demo extends Phaser.Scene {
   update() {
     // don't execute if we are terminating
     if (this.isTerminating) return;
+  }
+
+  createHud() {
+    const help = 'Hold/touch to move • Avoid dragons • Reach the treasure';
+    this.hudText = this.add
+      .text(12, 12, help, {
+        fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif',
+        fontSize: '14px',
+        color: '#ffffff',
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        padding: { left: 10, right: 10, top: 6, bottom: 6 }
+      })
+      .setScrollFactor(0)
+      .setDepth(10);
+
+    // Fade the hint after a few seconds so it doesn't distract.
+    this.tweens.add({
+      targets: this.hudText,
+      delay: 3500,
+      duration: 800,
+      alpha: 0,
+      ease: 'Sine.easeInOut'
+    });
   }
 
   createPlayer() {
@@ -58,8 +83,28 @@ export default class Demo extends Phaser.Scene {
     this.goal = new Goal(this, 560, 180);
     this.goal.setPlayer(this.player);
     this.goal.on('reached', () => {
-      this.scene.restart();
+      if (this.isTerminating) return;
+      this.winRound();
     });
+  }
+
+  winRound() {
+    this.isTerminating = true;
+
+    // quick positive feedback
+    this.cameras.main.flash(180, 255, 255, 255);
+
+    this.time.delayedCall(220, () => {
+      this.cameras.main.fade(250, 0, 0, 0);
+    });
+
+    this.cameras.main.once(
+      'camerafadeoutcomplete',
+      () => {
+        this.scene.restart();
+      },
+      this
+    );
   }
 
   gameOver() {
