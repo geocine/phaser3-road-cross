@@ -12,7 +12,9 @@ export default class Goal extends Phaser.GameObjects.Sprite {
     this.player = player;
   }
 
-  preUpdate() {
+  preUpdate(time: number, delta: number) {
+    super.preUpdate(time, delta);
+
     const playerRect = this.player.getBounds();
     const treasureRect = this.getBounds();
 
