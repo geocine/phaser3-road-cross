@@ -1,5 +1,20 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 import Player from './Player';
+
+function insetRect(
+  rect: Phaser.Geom.Rectangle,
+  insetXPct: number,
+  insetYPct: number
+) {
+  const insetX = rect.width * insetXPct;
+  const insetY = rect.height * insetYPct;
+  return new Phaser.Geom.Rectangle(
+    rect.x + insetX / 2,
+    rect.y + insetY / 2,
+    rect.width - insetX,
+    rect.height - insetY
+  );
+}
 
 export default class Enemy extends Phaser.GameObjects.Sprite {
   speed: number;
@@ -9,7 +24,12 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
   maxSpeed: number;
   player: Player;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, speedMultiplier: number = 1) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    speedMultiplier: number = 1
+  ) {
     super(scene, x, y, 'enemy');
     scene.add.existing(this);
     this.setScale(0.4);
@@ -24,7 +44,9 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     // Randomize both speed and initial patrol direction so enemies don't all start
     // moving down in sync.
     const direction = Math.random() < 0.5 ? 1 : -1;
-    this.speed = (this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed)) * direction;
+    this.speed =
+      (this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed)) *
+      direction;
   }
 
   setPlayer(player: Player) {
@@ -48,8 +70,10 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
       this.speed *= -1;
     }
 
-    let playerRect = this.player.getBounds();
-    let enemyRect = this.getBounds();
+    // Slightly shrink hitboxes so collisions feel fairer than sprite bounds.
+    const playerRect = insetRect(this.player.getBounds(), 0.2, 0.25);
+    const enemyRect = insetRect(this.getBounds(), 0.28, 0.35);
+
     if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, enemyRect)) {
       return this.emit('kill');
     }
