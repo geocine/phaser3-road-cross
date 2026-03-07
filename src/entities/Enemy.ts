@@ -1,12 +1,12 @@
 ﻿import Phaser from 'phaser';
 import Player from './Player';
+
 export default class Enemy extends Phaser.GameObjects.Sprite {
   speed: number;
   minY: number;
   maxY: number;
   minSpeed: number;
   maxSpeed: number;
-  direction: number;
   player: Player;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -16,12 +16,15 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     this.setFlipX(true);
     this.minY = 80;
     this.maxY = 280;
+
     // pixels per second
     this.minSpeed = 120;
     this.maxSpeed = 270;
-    this.direction = Math.random() < 0.5 ? 1 : -1;
-    this.speed =
-      this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
+
+    // Randomize both speed and initial patrol direction so enemies don't all start
+    // moving down in sync.
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    this.speed = (this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed)) * direction;
   }
 
   setPlayer(player: Player) {
@@ -40,6 +43,8 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     const conditionDown = this.speed > 0 && this.y >= this.maxY;
 
     if (conditionUp || conditionDown) {
+      // Avoid drifting past bounds on low-FPS frames.
+      this.y = Phaser.Math.Clamp(this.y, this.minY, this.maxY);
       this.speed *= -1;
     }
 
