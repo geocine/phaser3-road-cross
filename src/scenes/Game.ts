@@ -1,4 +1,4 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 import Enemy from '../entities/Enemy';
 import Player from '../entities/Player';
 import Goal from '../entities/Goal';
@@ -8,7 +8,9 @@ export default class Demo extends Phaser.Scene {
   enemy: Enemy;
   goal: Goal;
   isTerminating: boolean;
-  hudText?: Phaser.GameObjects.Text;
+
+  winStreak: number;
+  hintText?: Phaser.GameObjects.Text;
 
   constructor() {
     super('GameScene');
@@ -25,6 +27,9 @@ export default class Demo extends Phaser.Scene {
     // Reset transient state when the scene restarts.
     this.isTerminating = false;
 
+    // Persist a simple win streak across restarts to gently ramp difficulty.
+    this.winStreak = Number(this.registry.get('winStreak') ?? 0);
+
     this.add.sprite(320, 180, 'background');
     this.createHud();
     this.createPlayer();
@@ -39,7 +44,8 @@ export default class Demo extends Phaser.Scene {
 
   createHud() {
     const help = 'Hold/touch to move • Avoid dragons • Reach the treasure';
-    this.hudText = this.add
+
+    this.hintText = this.add
       .text(12, 12, help, {
         fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif',
         fontSize: '14px',
@@ -50,15 +56,17 @@ export default class Demo extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(10);
 
+
     // Fade the hint after a few seconds so it doesn't distract.
     this.tweens.add({
-      targets: this.hudText,
+      targets: this.hintText,
       delay: 3500,
       duration: 800,
       alpha: 0,
       ease: 'Sine.easeInOut'
     });
   }
+
 
   createPlayer() {
     this.player = new Player(this, 50, 180);
@@ -68,8 +76,11 @@ export default class Demo extends Phaser.Scene {
   }
 
   createEnemies() {
+    // Mild difficulty ramp: each consecutive win increases enemy speed a bit.
+    const speedMultiplier = Phaser.Math.Clamp(1 + this.winStreak * 0.07, 1, 1.6);
+
     for (let i = 0, x = 90, y = 100; i < 5; i++) {
-      const enemy = new Enemy(this, x, y);
+      const enemy = new Enemy(this, x, y, speedMultiplier);
       enemy.setPlayer(this.player);
       enemy.on('kill', () => {
         this.player.kill();
@@ -91,6 +102,9 @@ export default class Demo extends Phaser.Scene {
   winRound() {
     this.isTerminating = true;
 
+    this.winStreak += 1;
+    this.registry.set('winStreak', this.winStreak);
+
     // quick positive feedback
     this.cameras.main.flash(180, 255, 255, 255);
 
@@ -110,6 +124,10 @@ export default class Demo extends Phaser.Scene {
   gameOver() {
     // initiated game over sequence
     this.isTerminating = true;
+
+    // Reset streak on death.
+    this.winStreak = 0;
+    this.registry.set('winStreak', this.winStreak);
 
     // shake camera
     this.cameras.main.shake(500);
