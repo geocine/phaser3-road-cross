@@ -9,7 +9,7 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
   maxSpeed: number;
   player: Player;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, speedMultiplier: number = 1) {
     super(scene, x, y, 'enemy');
     scene.add.existing(this);
     this.setScale(0.4);
@@ -18,8 +18,8 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     this.maxY = 280;
 
     // pixels per second
-    this.minSpeed = 120;
-    this.maxSpeed = 270;
+    this.minSpeed = 120 * speedMultiplier;
+    this.maxSpeed = 270 * speedMultiplier;
 
     // Randomize both speed and initial patrol direction so enemies don't all start
     // moving down in sync.
