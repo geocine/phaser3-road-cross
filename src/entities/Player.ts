@@ -9,7 +9,10 @@ type PlayerKeys = {
 };
 
 export default class Player extends Phaser.GameObjects.Sprite {
-  playerSpeed: number;
+  maxMoveSpeed: number;
+  moveAcceleration: number;
+  moveFriction: number;
+  horizontalVelocity: number;
   dead: boolean;
   keys?: PlayerKeys;
 
@@ -18,8 +21,11 @@ export default class Player extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     this.setScale(0.5);
 
-    // pixels per second
-    this.playerSpeed = 180;
+    // Movement tuning keeps input responsive while softening abrupt direction changes.
+    this.maxMoveSpeed = 220;
+    this.moveAcceleration = 1200;
+    this.moveFriction = 1800;
+    this.horizontalVelocity = 0;
     this.dead = false;
 
     // Optional keyboard controls (desktop): arrows / A-D (and Space to move right).
@@ -56,14 +62,36 @@ export default class Player extends Phaser.GameObjects.Sprite {
     const moveLeftFromPointer = hasPointerInput && pointerX < this.x - pointerDeadZonePx;
     const moveRightFromPointer = hasPointerInput && pointerX > this.x + pointerDeadZonePx;
 
-    if (moveLeftFromKeys || moveLeftFromPointer) this.x -= this.playerSpeed * dt;
-    if (moveRightFromKeys || moveRightFromPointer) this.x += this.playerSpeed * dt;
+    let moveDirection = 0;
+    if (moveLeftFromKeys || moveLeftFromPointer) moveDirection -= 1;
+    if (moveRightFromKeys || moveRightFromPointer) moveDirection += 1;
+
+    if (moveDirection !== 0) {
+      this.horizontalVelocity += moveDirection * this.moveAcceleration * dt;
+      this.horizontalVelocity = Phaser.Math.Clamp(
+        this.horizontalVelocity,
+        -this.maxMoveSpeed,
+        this.maxMoveSpeed
+      );
+    } else {
+      this.horizontalVelocity = Phaser.Math.MoveTowards(
+        this.horizontalVelocity,
+        0,
+        this.moveFriction * dt
+      );
+    }
+
+    this.x += this.horizontalVelocity * dt;
 
     // Keep player within the visible game bounds.
     const halfW = this.displayWidth / 2;
     const maxX = this.scene.scale.width - halfW;
     const minX = halfW;
     this.x = Phaser.Math.Clamp(this.x, minX, maxX);
+
+    if ((this.x === minX && this.horizontalVelocity < 0) || (this.x === maxX && this.horizontalVelocity > 0)) {
+      this.horizontalVelocity = 0;
+    }
   }
 
   kill() {
@@ -73,5 +101,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
 
   restart() {
     this.dead = false;
+    this.horizontalVelocity = 0;
   }
 }
