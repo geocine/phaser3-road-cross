@@ -74,11 +74,16 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.maxMoveSpeed
       );
     } else {
-      this.horizontalVelocity = Phaser.Math.MoveTowards(
-        this.horizontalVelocity,
-        0,
-        this.moveFriction * dt
-      );
+      // Phaser doesn't ship a `Math.MoveTowards` helper (that's a Unity-ism), so implement
+      // the same behavior locally: move `current` toward `target` by at most `maxDelta`.
+      const target = 0;
+      const maxDelta = this.moveFriction * dt;
+      const deltaToTarget = target - this.horizontalVelocity;
+      if (Math.abs(deltaToTarget) <= maxDelta) {
+        this.horizontalVelocity = target;
+      } else {
+        this.horizontalVelocity += Math.sign(deltaToTarget) * maxDelta;
+      }
     }
 
     this.x += this.horizontalVelocity * dt;
