@@ -78,15 +78,21 @@ export default class Demo extends Phaser.Scene {
   createEnemies() {
     // Mild difficulty ramp: each consecutive win increases enemy speed a bit.
     const speedMultiplier = Phaser.Math.Clamp(1 + this.winStreak * 0.07, 1, 1.6);
+    const enemyCount = Phaser.Math.Clamp(5 + Math.floor(this.winStreak / 2), 5, 7);
+    const xStart = 110;
+    const xEnd = 470;
+    const yStart = 92;
+    const yEnd = 268;
 
-    for (let i = 0, x = 90, y = 100; i < 5; i++) {
+    for (let i = 0; i < enemyCount; i++) {
+      const progress = enemyCount === 1 ? 0.5 : i / (enemyCount - 1);
+      const x = Phaser.Math.Linear(xStart, xEnd, progress);
+      const y = Phaser.Math.Linear(yStart, yEnd, progress);
       const enemy = new Enemy(this, x, y, speedMultiplier);
       enemy.setPlayer(this.player);
       enemy.on('kill', () => {
         this.player.kill();
       });
-      x += 80;
-      y += 20;
     }
   }
 
