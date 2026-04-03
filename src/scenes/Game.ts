@@ -83,12 +83,21 @@ export default class Demo extends Phaser.Scene {
     const xEnd = 470;
     const yStart = 92;
     const yEnd = 268;
+    const baseMinY = 80;
+    const baseMaxY = 280;
 
     for (let i = 0; i < enemyCount; i++) {
       const progress = enemyCount === 1 ? 0.5 : i / (enemyCount - 1);
       const x = Phaser.Math.Linear(xStart, xEnd, progress);
       const y = Phaser.Math.Linear(yStart, yEnd, progress);
-      const enemy = new Enemy(this, x, y, speedMultiplier);
+      const patrolShift = Phaser.Math.Linear(-18, 18, progress);
+      const patrolInset = Math.abs(progress - 0.5) * 14;
+      const minY = baseMinY + patrolShift + patrolInset;
+      const maxY = baseMaxY + patrolShift - patrolInset;
+      const enemy = new Enemy(this, x, y, speedMultiplier, {
+        minY,
+        maxY
+      });
       enemy.setPlayer(this.player);
       enemy.on('kill', () => {
         this.player.kill();
