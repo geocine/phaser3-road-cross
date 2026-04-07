@@ -14,7 +14,10 @@ export default class Player extends Phaser.GameObjects.Sprite {
   moveFriction: number;
   horizontalVelocity: number;
   dead: boolean;
+  invulnerable: boolean;
   keys?: PlayerKeys;
+  spawnGraceTimer?: Phaser.Time.TimerEvent;
+  spawnGraceTween?: Phaser.Tweens.Tween;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player');
@@ -27,6 +30,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.moveFriction = 1800;
     this.horizontalVelocity = 0;
     this.dead = false;
+    this.invulnerable = false;
 
     // Optional keyboard controls (desktop): arrows / A-D (and Space to move right).
     // Guarded so this doesn't break in environments without the keyboard plugin.
@@ -104,8 +108,36 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.emit('dead');
   }
 
+  startSpawnGrace(durationMs: number = 600) {
+    this.endSpawnGrace();
+    this.invulnerable = true;
+
+    this.spawnGraceTween = this.scene.tweens.add({
+      targets: this,
+      alpha: 0.45,
+      duration: 90,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1
+    });
+
+    this.spawnGraceTimer = this.scene.time.delayedCall(durationMs, () => {
+      this.endSpawnGrace();
+    });
+  }
+
+  endSpawnGrace() {
+    this.invulnerable = false;
+    this.spawnGraceTimer?.remove(false);
+    this.spawnGraceTimer = undefined;
+    this.spawnGraceTween?.stop();
+    this.spawnGraceTween = undefined;
+    this.setAlpha(1);
+  }
+
   restart() {
     this.dead = false;
     this.horizontalVelocity = 0;
+    this.endSpawnGrace();
   }
 }

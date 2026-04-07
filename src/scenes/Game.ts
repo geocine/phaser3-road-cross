@@ -3,6 +3,8 @@ import Enemy from '../entities/Enemy';
 import Player from '../entities/Player';
 import Goal from '../entities/Goal';
 
+const SPAWN_GRACE_MS = 600;
+
 export default class Demo extends Phaser.Scene {
   player: Player;
   enemy: Enemy;
@@ -70,6 +72,7 @@ export default class Demo extends Phaser.Scene {
 
   createPlayer() {
     this.player = new Player(this, 50, 180);
+    this.player.startSpawnGrace(SPAWN_GRACE_MS);
     this.player.on('dead', () => {
       this.gameOver();
     });
