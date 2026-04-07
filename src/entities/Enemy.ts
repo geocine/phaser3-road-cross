@@ -97,6 +97,8 @@ export default class Enemy extends Phaser.GameObjects.Sprite {
     const playerRect = insetRect(this.player.getBounds(), 0.2, 0.25);
     const enemyRect = insetRect(this.getBounds(), 0.28, 0.35);
 
+    if (this.player.invulnerable) return;
+
     if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, enemyRect)) {
       return this.emit('kill');
     }
