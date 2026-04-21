@@ -12,6 +12,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
   maxMoveSpeed: number;
   moveAcceleration: number;
   moveFriction: number;
+  pointerApproachFactor: number;
   horizontalVelocity: number;
   dead: boolean;
   invulnerable: boolean;
@@ -28,6 +29,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.maxMoveSpeed = 220;
     this.moveAcceleration = 1200;
     this.moveFriction = 1800;
+    this.pointerApproachFactor = 7;
     this.horizontalVelocity = 0;
     this.dead = false;
     this.invulnerable = false;
@@ -62,32 +64,31 @@ export default class Player extends Phaser.GameObjects.Sprite {
     const pointer = this.scene.input.activePointer;
     const hasPointerInput = pointer.isDown;
     const pointerX = pointer.worldX ?? pointer.x;
-    const pointerDeadZonePx = 8;
-    const moveLeftFromPointer = hasPointerInput && pointerX < this.x - pointerDeadZonePx;
-    const moveRightFromPointer = hasPointerInput && pointerX > this.x + pointerDeadZonePx;
+    const pointerDeadZonePx = 14;
 
-    let moveDirection = 0;
-    if (moveLeftFromKeys || moveLeftFromPointer) moveDirection -= 1;
-    if (moveRightFromKeys || moveRightFromPointer) moveDirection += 1;
+    let desiredVelocity = 0;
+    if (moveLeftFromKeys) desiredVelocity -= this.maxMoveSpeed;
+    if (moveRightFromKeys) desiredVelocity += this.maxMoveSpeed;
 
-    if (moveDirection !== 0) {
-      this.horizontalVelocity += moveDirection * this.moveAcceleration * dt;
-      this.horizontalVelocity = Phaser.Math.Clamp(
-        this.horizontalVelocity,
-        -this.maxMoveSpeed,
-        this.maxMoveSpeed
-      );
-    } else {
-      // Phaser doesn't ship a `Math.MoveTowards` helper (that's a Unity-ism), so implement
-      // the same behavior locally: move `current` toward `target` by at most `maxDelta`.
-      const target = 0;
-      const maxDelta = this.moveFriction * dt;
-      const deltaToTarget = target - this.horizontalVelocity;
-      if (Math.abs(deltaToTarget) <= maxDelta) {
-        this.horizontalVelocity = target;
-      } else {
-        this.horizontalVelocity += Math.sign(deltaToTarget) * maxDelta;
+    if (desiredVelocity === 0 && hasPointerInput) {
+      const pointerDeltaX = pointerX - this.x;
+      if (Math.abs(pointerDeltaX) > pointerDeadZonePx) {
+        // Scale speed by distance so touch controls settle onto the held position
+        // instead of overshooting and oscillating around the finger.
+        desiredVelocity = Phaser.Math.Clamp(
+          pointerDeltaX * this.pointerApproachFactor,
+          -this.maxMoveSpeed,
+          this.maxMoveSpeed
+        );
       }
+    }
+
+    const maxDelta = (desiredVelocity === 0 ? this.moveFriction : this.moveAcceleration) * dt;
+    const velocityDelta = desiredVelocity - this.horizontalVelocity;
+    if (Math.abs(velocityDelta) <= maxDelta) {
+      this.horizontalVelocity = desiredVelocity;
+    } else {
+      this.horizontalVelocity += Math.sign(velocityDelta) * maxDelta;
     }
 
     this.x += this.horizontalVelocity * dt;
