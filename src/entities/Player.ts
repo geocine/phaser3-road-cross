@@ -12,6 +12,8 @@ export default class Player extends Phaser.GameObjects.Sprite {
   maxMoveSpeed: number;
   moveAcceleration: number;
   moveFriction: number;
+  reverseAccelerationMultiplier: number;
+  stopSnapSpeed: number;
   pointerApproachFactor: number;
   horizontalVelocity: number;
   dead: boolean;
@@ -29,6 +31,8 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.maxMoveSpeed = 220;
     this.moveAcceleration = 1200;
     this.moveFriction = 1800;
+    this.reverseAccelerationMultiplier = 1.75;
+    this.stopSnapSpeed = 24;
     this.pointerApproachFactor = 7;
     this.horizontalVelocity = 0;
     this.dead = false;
@@ -83,12 +87,25 @@ export default class Player extends Phaser.GameObjects.Sprite {
       }
     }
 
-    const maxDelta = (desiredVelocity === 0 ? this.moveFriction : this.moveAcceleration) * dt;
+    const isReversing =
+      desiredVelocity !== 0 &&
+      this.horizontalVelocity !== 0 &&
+      Math.sign(desiredVelocity) !== Math.sign(this.horizontalVelocity);
+    const appliedAcceleration = isReversing
+      ? this.moveAcceleration * this.reverseAccelerationMultiplier
+      : desiredVelocity === 0
+        ? this.moveFriction
+        : this.moveAcceleration;
+    const maxDelta = appliedAcceleration * dt;
     const velocityDelta = desiredVelocity - this.horizontalVelocity;
     if (Math.abs(velocityDelta) <= maxDelta) {
       this.horizontalVelocity = desiredVelocity;
     } else {
       this.horizontalVelocity += Math.sign(velocityDelta) * maxDelta;
+    }
+
+    if (desiredVelocity === 0 && Math.abs(this.horizontalVelocity) < this.stopSnapSpeed) {
+      this.horizontalVelocity = 0;
     }
 
     this.x += this.horizontalVelocity * dt;
