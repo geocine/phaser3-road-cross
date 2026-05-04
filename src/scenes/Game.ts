@@ -81,7 +81,9 @@ export default class Demo extends Phaser.Scene {
   createEnemies() {
     // Mild difficulty ramp: each consecutive win increases enemy speed a bit.
     const speedMultiplier = Phaser.Math.Clamp(1 + this.winStreak * 0.07, 1, 1.6);
-    const enemyCount = Phaser.Math.Clamp(5 + Math.floor(this.winStreak / 2), 5, 7);
+    // Keep the first run slightly more open so the player learns the crossing rhythm
+    // before later restarts return to the denser traffic pattern.
+    const enemyCount = Phaser.Math.Clamp(4 + Math.ceil(this.winStreak / 2), 4, 7);
     const xStart = 110;
     const xEnd = 470;
     const yStart = 92;
