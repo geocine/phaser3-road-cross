@@ -13,6 +13,7 @@ export default class Demo extends Phaser.Scene {
 
   winStreak: number;
   hintText?: Phaser.GameObjects.Text;
+  treasureParticles?: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor() {
     super('GameScene');
@@ -33,6 +34,7 @@ export default class Demo extends Phaser.Scene {
     this.winStreak = Number(this.registry.get('winStreak') ?? 0);
 
     this.add.sprite(320, 180, 'background');
+    this.createTreasureParticles();
     this.createHud();
     this.createPlayer();
     this.createEnemies();
@@ -66,6 +68,21 @@ export default class Demo extends Phaser.Scene {
       duration: 800,
       alpha: 0,
       ease: 'Sine.easeInOut'
+    });
+  }
+
+  createTreasureParticles() {
+    this.treasureParticles = this.add.particles(0, 0, 'goal', {
+      x: 560,
+      y: 180,
+      speed: { min: 80, max: 220 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.8, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 800,
+      blendMode: Phaser.BlendModes.ADD,
+      emitting: false,
+      quantity: 30
     });
   }
 
@@ -126,6 +143,7 @@ export default class Demo extends Phaser.Scene {
     this.registry.set('winStreak', this.winStreak);
 
     // quick positive feedback
+    this.treasureParticles?.emitParticleAt(this.goal.x, this.goal.y);
     this.cameras.main.flash(180, 255, 255, 255);
 
     this.time.delayedCall(220, () => {
